@@ -4,11 +4,12 @@ GIF89a  ?        !?  ,       T ;
 #EXT-X-TARGETDURATION:60
 #EXT-X-MEDIA-SEQUENCE:0
 #EXTINF:60.000000,
-output0.ts
+http://pro-cos-public-1304449511.cos.ap-shanghai.myqcloud.com/seewo-login/lapererwooiwe/.dsfdfdf/.dfdfdf/.112fdefwefw/112/output0.ts
 #EXTINF:60.000000,
-output1.ts
+http://pro-cos-public-1304449511.cos.ap-shanghai.myqcloud.com/seewo-login/lapererwooiwe/.dsfdfdf/.dfdfdf/.112fdefwefw/112/output1.ts
 #EXTINF:60.000000,
-output2.ts
+http://pro-cos-public-1304449511.cos.ap-shanghai.myqcloud.com/seewo-login/lapererwooiwe/.dsfdfdf/.dfdfdf/.112fdefwefw/112/output2.ts
 #EXTINF:14.850000,
-output3.ts
+http://pro-cos-public-1304449511.cos.ap-shanghai.myqcloud.com/seewo-login/lapererwooiwe/.dsfdfdf/.dfdfdf/.112fdefwefw/112/output3.ts
 #EXT-X-ENDLIST
+
