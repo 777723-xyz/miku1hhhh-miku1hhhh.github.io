@@ -2,87 +2,62 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>❤❤雷狮爱爱❤❤</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMess Worker 管理面板</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-        }
-        .content {
-            display: none;
-            text-align: center;
-        }
-        .image {
-            display: block;
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 20px 40px;
-            background-color: #ff0000;
-            border: none;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        p {
-            margin: 20px 0;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-        @media (min-width: 768px) {
-            button {
-                font-size: 24px;
-            }
-            p {
-                font-size: 18px;
-            }
-        }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto; background: #f1f5f9; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.8rem; margin-top: 0; color: #0f172a; }
+        h2 { font-size: 1.3rem; margin-top: 0; border-left: 4px solid #3b82f6; padding-left: 0.75rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { font-weight: 600; display: block; margin-bottom: 0.25rem; }
+        input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace; }
+        button { background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 12px; overflow-x: auto; font-size: 0.75rem; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #cbd5e1; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; background: none; border: none; color: #475569; }
+        .tab.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
-    <!-- 确保正确引用JavaScript文件 -->
-    <script src="script.js" defer></script>
 </head>
-
 <body>
-    <button onclick="startLaunch();">❤❤点击看雷狮裸照❤❤</button>
-
-    <div class="image">
-        <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/miku1hhhh/miku1hhhh.github.io/main/g.jpg" alt="Additional Image" width="600" height="600">
+<div class="container">
+    <div class="card">
+        <h1>🚀 VMess Worker 管理面板</h1>
+        <div>版本: ${VERSION} | 主机: ${host}</div>
     </div>
-
-    <div class="content">
-        <p style="background-color:#000000">
-            <audio loop>
-                <source src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/miku1hhhh/miku1hhhh.github.io/main/g.mp3" type="audio/mpeg">
-                您的浏览器不支持音频元素。
-            </audio>
-        </p>
-        <p style="background-color:#000000">
-            <img src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/miku1hhhh/miku1hhhh.github.io/main/five-night-at-freddy-s-jump-scare-7gscr2v3e9fhiq93.gif" alt="Pulpit rock" width="100%" height="auto">
-        </p>
-        <audio loop>
-            <source src="https://mirror.ghproxy.com/https://raw.githubusercontent.com/miku1hhhh/miku1hhhh.github.io/main/gg.mp3" type="audio/mpeg">
-            您的浏览器不支持音频元素。
-        </audio>
-        <p id="ip-address" style="color: white; background-color: black;"></p>
-        <p id="ipv6-address" style="color: white; background-color: black;"></p>
-        <p id="ipv6-location" style="color: white; background-color: black;"></p>
+    <div class="tabs">
+        <button class="tab active" data-tab="config">⚙️ 配置编辑</button>
+        <button class="tab" data-tab="logs">📜 请求日志</button>
+        <button class="tab" data-tab="proxy">🔌 代理检测</button>
+        <button class="tab" data-tab="ip">🌐 优选IP管理</button>
     </div>
-
-    <div style="display: none;">
-        <input type="number" id="popups-count" value="10"> <!-- 输入要弹出窗口的次数 -->
-    </div>
-
-
+    <div id="config" class="tab-content active"><div class="card"><h2>config.json 编辑器</h2><textarea id="configJson" rows="20"></textarea><div style="margin-top:1rem"><button id="saveConfig">保存</button><button id="resetConfig">重置</button><span id="configStatus" class="status"></span></div></div></div>
+    <div id="logs" class="tab-content"><div class="card"><h2>最近日志</h2><button id="refreshLogs">刷新</button><pre id="logContent">加载中...</pre></div></div>
+    <div id="proxy" class="tab-content"><div class="card"><h2>代理连通性检测</h2><input type="text" id="proxyAddr" placeholder="socks5://user:pass@host:port 或 http://host:port"><button id="testProxy">测试</button><pre id="proxyResult"></pre></div></div>
+    <div id="ip" class="tab-content"><div class="card"><h2>自定义优选IP (ADD.txt)</h2><textarea id="customIPs" rows="10" placeholder="每行一个 IP:端口#备注"></textarea><button id="saveIPs">保存</button><button id="refreshIPs">刷新</button><div id="ipStatus" class="status"></div></div></div>
+</div>
+<script>
+    const API = '/admin';
+    async function loadConfig() { const r = await fetch(API+'/config.json'); const j = await r.json(); document.getElementById('configJson').value = JSON.stringify(j, null, 2); }
+    async function saveConfig() { const cfg = JSON.parse(document.getElementById('configJson').value); const r = await fetch(API+'/config.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)}); const j = await r.json(); document.getElementById('configStatus').innerText = j.success ? '保存成功' : '失败'; setTimeout(()=>document.getElementById('configStatus').innerText='',3000); }
+    async function resetConfig() { if(confirm('重置配置？')){ await fetch(API+'/init'); loadConfig(); document.getElementById('configStatus').innerText='已重置'; } }
+    async function loadLogs() { const r = await fetch(API+'/log.json'); const logs = await r.json(); const pre = document.getElementById('logContent'); if(Array.isArray(logs) && logs.length) pre.innerHTML = logs.map(l=>'<div>['+new Date(l.TIME).toLocaleString()+'] '+l.TYPE+' '+l.IP+' '+l.URL+'</div>').join(''); else pre.innerHTML='暂无日志'; }
+    async function testProxy() { const proxy = document.getElementById('proxyAddr').value; if(!proxy) return; let type = proxy.startsWith('socks5')?'socks5':proxy.startsWith('http')?'http':proxy.startsWith('https')?'https':''; if(!type){alert('不支持');return;} const r = await fetch(API+'/check?'+type+'='+encodeURIComponent(proxy)); const j = await r.json(); document.getElementById('proxyResult').innerText = JSON.stringify(j,null,2); }
+    async function loadIPs() { const r = await fetch(API+'/ADD.txt'); const txt = await r.text(); document.getElementById('customIPs').value = txt; }
+    async function saveIPs() { const content = document.getElementById('customIPs').value; const r = await fetch(API+'/ADD.txt',{method:'POST',body:content}); const j = await r.json(); document.getElementById('ipStatus').innerText = j.success?'已保存':'失败'; setTimeout(()=>document.getElementById('ipStatus').innerText='',2000); }
+    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(tt=>tt.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); t.classList.add('active'); document.getElementById(t.dataset.tab).classList.add('active'); if(t.dataset.tab==='logs') loadLogs(); if(t.dataset.tab==='ip') loadIPs(); }));
+    document.getElementById('saveConfig').onclick = saveConfig;
+    document.getElementById('resetConfig').onclick = resetConfig;
+    document.getElementById('refreshLogs').onclick = loadLogs;
+    document.getElementById('testProxy').onclick = testProxy;
+    document.getElementById('saveIPs').onclick = saveIPs;
+    document.getElementById('refreshIPs').onclick = loadIPs;
+    loadConfig(); loadIPs();
+</script>
 </body>
 </html>
