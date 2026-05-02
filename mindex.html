@@ -3,61 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VMess Worker 管理面板</title>
+    <title>VMess 订阅管理面板</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto; background: #f1f5f9; margin: 0; padding: 20px; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
         .container { max-width: 1400px; margin: 0 auto; }
-        .card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
-        h1 { font-size: 1.8rem; margin-top: 0; color: #0f172a; }
-        h2 { font-size: 1.3rem; margin-top: 0; border-left: 4px solid #3b82f6; padding-left: 0.75rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { font-weight: 600; display: block; margin-bottom: 0.25rem; }
-        input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; font-family: monospace; }
-        button { background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
-        button:hover { background: #2563eb; }
-        pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 12px; overflow-x: auto; font-size: 0.75rem; }
-        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #cbd5e1; }
-        .tab { padding: 0.5rem 1rem; cursor: pointer; background: none; border: none; color: #475569; }
-        .tab.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            transition: all 0.2s;
+        }
+        h1 { font-size: 1.8rem; margin: 0 0 0.5rem 0; color: #0f172a; display: flex; align-items: center; gap: 12px; }
+        h2 { font-size: 1.4rem; margin: 0 0 1rem 0; border-left: 4px solid #3b82f6; padding-left: 0.8rem; }
+        .sub { color: #475569; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.8rem; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { font-weight: 600; display: block; margin-bottom: 0.4rem; color: #1e293b; }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        button:hover { background: #2563eb; transform: translateY(-1px); }
+        button.secondary { background: #64748b; }
+        button.secondary:hover { background: #475569; }
+        button.outline { background: transparent; border: 1px solid #3b82f6; color: #3b82f6; }
+        button.outline:hover { background: #eff6ff; }
+        .status { font-size: 0.85rem; color: #475569; margin-top: 0.5rem; }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 16px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        .log-line { font-family: monospace; border-bottom: 1px solid #334155; padding: 0.4rem 0; font-size: 0.8rem; }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .tab { background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; color: #475569; font-weight: 500; border-radius: 40px; margin: 0; }
+        .tab.active { background: #3b82f6; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .copy-btn { background: #10b981; padding: 0.3rem 0.8rem; font-size: 0.8rem; margin-left: 0.5rem; }
+        .copy-btn:hover { background: #059669; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .badge { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        @media (max-width: 700px) { .card { padding: 1rem; } }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card">
-        <h1>🚀 VMess Worker 管理面板</h1>
-        <div>版本: ${VERSION} | 主机: ${host}</div>
+    <div class="card" style="text-align: center;">
+        <h1>🚀 VMess 订阅管理面板</h1>
+        <div class="sub">基于 Cloudflare Worker 的自定义订阅系统 | 支持优选IP、订阅转换、节点检测</div>
+        <div id="loginArea" style="display: none;">
+            <input type="password" id="loginPwd" placeholder="管理密码" style="width: 200px; display: inline-block; margin-right: 10px;">
+            <button id="doLogin">登录</button>
+            <span id="loginMsg" class="status"></span>
+        </div>
+        <div id="appArea" style="display: none;">
+            <div class="tabs">
+                <button class="tab active" data-tab="sub">📡 订阅管理</button>
+                <button class="tab" data-tab="config">⚙️ 节点配置</button>
+                <button class="tab" data-tab="ip">🌐 优选IP库</button>
+                <button class="tab" data-tab="logs">📜 访问日志</button>
+                <button class="tab" data-tab="test">🔌 代理检测</button>
+            </div>
+
+            <!-- 订阅管理 Tab -->
+            <div id="sub" class="tab-content active">
+                <div class="card">
+                    <h2>📎 订阅链接</h2>
+                    <div class="flex-between">
+                        <div><strong>普通订阅（Base64）</strong><span class="badge" style="margin-left: 10px;">?target=mixed</span></div>
+                        <button id="copySubLink" class="copy-btn">复制链接</button>
+                    </div>
+                    <pre id="subLinkDisplay" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1;"></pre>
+                    <div class="flex-between" style="margin-top: 1rem;">
+                        <div><strong>Clash 订阅</strong><span class="badge">?target=clash</span></div>
+                        <button id="copyClashLink" class="copy-btn">复制链接</button>
+                    </div>
+                    <pre id="clashLinkDisplay" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1;"></pre>
+                    <div class="flex-between" style="margin-top: 1rem;">
+                        <div><strong>Sing-box 订阅</strong><span class="badge">?target=singbox</span></div>
+                        <button id="copySingLink" class="copy-btn">复制链接</button>
+                    </div>
+                    <pre id="singLinkDisplay" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1;"></pre>
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label>订阅名称 (SUBNAME)</label>
+                        <input type="text" id="subName" placeholder="例: MyWorker">
+                        <div class="status">订阅文件名会使用此名称</div>
+                    </div>
+                    <div class="form-group">
+                        <label>订阅更新时间 (小时)</label>
+                        <input type="number" id="subUpdate" min="1" max="168" step="1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label>订阅转换后端 (SUBAPI)</label>
+                        <input type="text" id="subApi" placeholder="https://SUBAPI.cmliussss.net">
+                    </div>
+                    <div class="form-group">
+                        <label>Clash 配置文件 (SUBCONFIG)</label>
+                        <input type="text" id="subConfig" placeholder="https://raw.githubusercontent.com/.../ACL4SSR_Online.ini">
+                    </div>
+                    <button id="saveSubSettings">💾 保存订阅设置</button>
+                    <span id="subSaveStatus" class="status"></span>
+                </div>
+            </div>
+
+            <!-- 节点配置 Tab -->
+            <div id="config" class="tab-content">
+                <div class="card">
+                    <h2>⚙️ 节点基础配置</h2>
+                    <div class="form-group">
+                        <label>UUID</label>
+                        <input type="text" id="uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>传输协议 (固定为 vmess)</label>
+                        <input type="text" id="protocol" value="vmess" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>WebSocket 路径 (PATH)</label>
+                        <input type="text" id="path" placeholder="/">
+                    </div>
+                    <div class="form-group">
+                        <label>TLS 指纹 (Fingerprint)</label>
+                        <select id="fingerprint">
+                            <option>chrome</option><option>firefox</option><option>safari</option><option>random</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>跳过证书验证 (不安全)</label>
+                        <select id="skipCert">
+                            <option value="false">否</option><option value="true">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>启用 0-RTT</label>
+                        <select id="zeroRtt">
+                            <option value="false">否</option><option value="true">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>随机路径 (随机化 / 路径混淆)</label>
+                        <select id="randomPath">
+                            <option value="false">否</option><option value="true">是</option>
+                        </select>
+                    </div>
+                    <button id="saveNodeConfig">💾 保存节点配置</button>
+                    <span id="nodeSaveStatus" class="status"></span>
+                </div>
+            </div>
+
+            <!-- 优选IP库 Tab -->
+            <div id="ip" class="tab-content">
+                <div class="card">
+                    <h2>🌐 自定义优选IP (ADD.txt)</h2>
+                    <textarea id="ipList" rows="10" placeholder="每行一个 IP:端口#备注&#10;例如: 104.16.0.1:443#CF优选1"></textarea>
+                    <div style="margin-top: 1rem;">
+                        <button id="saveIpList">💾 保存IP库</button>
+                        <button id="refreshIpList" class="secondary">🔄 刷新</button>
+                        <button id="testRandomIp" class="outline">🎲 生成随机优选IP</button>
+                    </div>
+                    <div id="ipStatus" class="status"></div>
+                </div>
+            </div>
+
+            <!-- 日志 Tab -->
+            <div id="logs" class="tab-content">
+                <div class="card">
+                    <h2>📜 最近请求日志</h2>
+                    <button id="refreshLogs">🔄 刷新日志</button>
+                    <pre id="logContent" style="max-height: 400px; overflow-y: auto;">加载中...</pre>
+                </div>
+            </div>
+
+            <!-- 代理检测 Tab -->
+            <div id="test" class="tab-content">
+                <div class="card">
+                    <h2>🔌 代理连通性检测</h2>
+                    <div class="form-group">
+                        <label>代理地址 (socks5:// 或 http:// 或 https://)</label>
+                        <input type="text" id="proxyAddr" placeholder="socks5://user:pass@host:port">
+                    </div>
+                    <button id="runProxyTest">开始检测</button>
+                    <pre id="proxyTestResult"></pre>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="tabs">
-        <button class="tab active" data-tab="config">⚙️ 配置编辑</button>
-        <button class="tab" data-tab="logs">📜 请求日志</button>
-        <button class="tab" data-tab="proxy">🔌 代理检测</button>
-        <button class="tab" data-tab="ip">🌐 优选IP管理</button>
-    </div>
-    <div id="config" class="tab-content active"><div class="card"><h2>config.json 编辑器</h2><textarea id="configJson" rows="20"></textarea><div style="margin-top:1rem"><button id="saveConfig">保存</button><button id="resetConfig">重置</button><span id="configStatus" class="status"></span></div></div></div>
-    <div id="logs" class="tab-content"><div class="card"><h2>最近日志</h2><button id="refreshLogs">刷新</button><pre id="logContent">加载中...</pre></div></div>
-    <div id="proxy" class="tab-content"><div class="card"><h2>代理连通性检测</h2><input type="text" id="proxyAddr" placeholder="socks5://user:pass@host:port 或 http://host:port"><button id="testProxy">测试</button><pre id="proxyResult"></pre></div></div>
-    <div id="ip" class="tab-content"><div class="card"><h2>自定义优选IP (ADD.txt)</h2><textarea id="customIPs" rows="10" placeholder="每行一个 IP:端口#备注"></textarea><button id="saveIPs">保存</button><button id="refreshIPs">刷新</button><div id="ipStatus" class="status"></div></div></div>
 </div>
+
 <script>
-    const API = '/admin';
-    async function loadConfig() { const r = await fetch(API+'/config.json'); const j = await r.json(); document.getElementById('configJson').value = JSON.stringify(j, null, 2); }
-    async function saveConfig() { const cfg = JSON.parse(document.getElementById('configJson').value); const r = await fetch(API+'/config.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)}); const j = await r.json(); document.getElementById('configStatus').innerText = j.success ? '保存成功' : '失败'; setTimeout(()=>document.getElementById('configStatus').innerText='',3000); }
-    async function resetConfig() { if(confirm('重置配置？')){ await fetch(API+'/init'); loadConfig(); document.getElementById('configStatus').innerText='已重置'; } }
-    async function loadLogs() { const r = await fetch(API+'/log.json'); const logs = await r.json(); const pre = document.getElementById('logContent'); if(Array.isArray(logs) && logs.length) pre.innerHTML = logs.map(l=>'<div>['+new Date(l.TIME).toLocaleString()+'] '+l.TYPE+' '+l.IP+' '+l.URL+'</div>').join(''); else pre.innerHTML='暂无日志'; }
-    async function testProxy() { const proxy = document.getElementById('proxyAddr').value; if(!proxy) return; let type = proxy.startsWith('socks5')?'socks5':proxy.startsWith('http')?'http':proxy.startsWith('https')?'https':''; if(!type){alert('不支持');return;} const r = await fetch(API+'/check?'+type+'='+encodeURIComponent(proxy)); const j = await r.json(); document.getElementById('proxyResult').innerText = JSON.stringify(j,null,2); }
-    async function loadIPs() { const r = await fetch(API+'/ADD.txt'); const txt = await r.text(); document.getElementById('customIPs').value = txt; }
-    async function saveIPs() { const content = document.getElementById('customIPs').value; const r = await fetch(API+'/ADD.txt',{method:'POST',body:content}); const j = await r.json(); document.getElementById('ipStatus').innerText = j.success?'已保存':'失败'; setTimeout(()=>document.getElementById('ipStatus').innerText='',2000); }
-    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(tt=>tt.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); t.classList.add('active'); document.getElementById(t.dataset.tab).classList.add('active'); if(t.dataset.tab==='logs') loadLogs(); if(t.dataset.tab==='ip') loadIPs(); }));
-    document.getElementById('saveConfig').onclick = saveConfig;
-    document.getElementById('resetConfig').onclick = resetConfig;
-    document.getElementById('refreshLogs').onclick = loadLogs;
-    document.getElementById('testProxy').onclick = testProxy;
-    document.getElementById('saveIPs').onclick = saveIPs;
-    document.getElementById('refreshIPs').onclick = loadIPs;
-    loadConfig(); loadIPs();
+    // ========== 全局变量 ==========
+    let apiBase = '';       // 相对路径调用 Worker 的 /admin 接口
+    let isLoggedIn = false;
+    let currentConfig = {};
+
+    // ========== 辅助函数 ==========
+    async function apiCall(path, options = {}) {
+        const url = `/admin/${path}`;
+        const resp = await fetch(url, {
+            ...options,
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp;
+    }
+
+    async function getJson(path) {
+        const resp = await apiCall(path);
+        return resp.json();
+    }
+
+    async function postJson(path, data) {
+        const resp = await apiCall(path, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        return resp.json();
+    }
+
+    async function putText(path, text) {
+        const resp = await fetch(`/admin/${path}`, {
+            method: 'POST',
+            body: text,
+            headers: { 'Content-Type': 'text/plain' }
+        });
+        return resp.json();
+    }
+
+    async function loadConfig() {
+        try {
+            const cfg = await getJson('config.json');
+            currentConfig = cfg;
+            // 填充表单
+            document.getElementById('uuid').value = cfg.UUID || '';
+            document.getElementById('path').value = cfg.PATH || '/';
+            document.getElementById('fingerprint').value = cfg.Fingerprint || 'chrome';
+            document.getElementById('skipCert').value = cfg.跳过证书验证 ? 'true' : 'false';
+            document.getElementById('zeroRtt').value = cfg.启用0RTT ? 'true' : 'false';
+            document.getElementById('randomPath').value = cfg.随机路径 ? 'true' : 'false';
+            document.getElementById('subName').value = cfg.优选订阅生成?.SUBNAME || 'vmess-worker';
+            document.getElementById('subUpdate').value = cfg.优选订阅生成?.SUBUpdateTime || 3;
+            document.getElementById('subApi').value = cfg.订阅转换配置?.SUBAPI || 'https://SUBAPI.cmliussss.net';
+            document.getElementById('subConfig').value = cfg.订阅转换配置?.SUBCONFIG || '';
+            // 刷新订阅链接显示
+            updateSubscriptionLinks();
+        } catch (e) {
+            console.error('加载配置失败', e);
+        }
+    }
+
+    async function saveNodeConfig() {
+        const newCfg = {
+            ...currentConfig,
+            UUID: document.getElementById('uuid').value,
+            PATH: document.getElementById('path').value,
+            Fingerprint: document.getElementById('fingerprint').value,
+            跳过证书验证: document.getElementById('skipCert').value === 'true',
+            启用0RTT: document.getElementById('zeroRtt').value === 'true',
+            随机路径: document.getElementById('randomPath').value === 'true',
+            优选订阅生成: {
+                ...currentConfig.优选订阅生成,
+                SUBNAME: document.getElementById('subName').value,
+                SUBUpdateTime: parseInt(document.getElementById('subUpdate').value, 10)
+            },
+            订阅转换配置: {
+                SUBAPI: document.getElementById('subApi').value,
+                SUBCONFIG: document.getElementById('subConfig').value,
+                SUBEMOJI: currentConfig.订阅转换配置?.SUBEMOJI || false
+            }
+        };
+        try {
+            await postJson('config.json', newCfg);
+            document.getElementById('nodeSaveStatus').innerText = '✅ 保存成功';
+            setTimeout(() => document.getElementById('nodeSaveStatus').innerText = '', 3000);
+            loadConfig(); // 重新加载
+        } catch (e) {
+            document.getElementById('nodeSaveStatus').innerText = '❌ 保存失败: ' + e.message;
+        }
+    }
+
+    async function saveSubSettings() {
+        // 实际上和保存节点配置是一样的，直接调用保存节点
+        await saveNodeConfig();
+    }
+
+    async function loadIpList() {
+        try {
+            const resp = await fetch('/admin/ADD.txt');
+            const txt = await resp.text();
+            document.getElementById('ipList').value = txt;
+        } catch (e) {
+            document.getElementById('ipList').value = '';
+        }
+    }
+
+    async function saveIpList() {
+        const content = document.getElementById('ipList').value;
+        try {
+            const resp = await putText('ADD.txt', content);
+            if (resp.success) {
+                document.getElementById('ipStatus').innerText = '✅ IP库已保存';
+                setTimeout(() => document.getElementById('ipStatus').innerText = '', 2000);
+            } else {
+                document.getElementById('ipStatus').innerText = '❌ 保存失败';
+            }
+        } catch (e) {
+            document.getElementById('ipStatus').innerText = '❌ 错误: ' + e.message;
+        }
+    }
+
+    async function testRandomIpGenerate() {
+        // 调用 /admin/check 之类？也可以直接提示
+        alert('请在 Worker 的 config.json 中配置本地IP库生成规则，或手动添加优选IP');
+    }
+
+    async function loadLogs() {
+        try {
+            const logs = await getJson('log.json');
+            const pre = document.getElementById('logContent');
+            if (Array.isArray(logs) && logs.length) {
+                pre.innerHTML = logs.map(l => `<div class="log-line">[${new Date(l.TIME).toLocaleString()}] ${l.TYPE} | ${l.IP} | ${l.URL}</div>`).join('');
+            } else {
+                pre.innerHTML = '暂无日志';
+            }
+        } catch (e) {
+            document.getElementById('logContent').innerText = '加载失败: ' + e.message;
+        }
+    }
+
+    async function testProxy() {
+        const proxy = document.getElementById('proxyAddr').value;
+        if (!proxy) return;
+        let type = '';
+        if (proxy.startsWith('socks5://')) type = 'socks5';
+        else if (proxy.startsWith('http://')) type = 'http';
+        else if (proxy.startsWith('https://')) type = 'https';
+        else { alert('请以 socks5:// 或 http:// 或 https:// 开头'); return; }
+        const start = Date.now();
+        try {
+            const resp = await fetch(`/admin/check?${type}=${encodeURIComponent(proxy)}`);
+            const data = await resp.json();
+            document.getElementById('proxyTestResult').innerHTML = JSON.stringify(data, null, 2);
+        } catch (e) {
+            document.getElementById('proxyTestResult').innerText = '检测失败: ' + e.message;
+        }
+    }
+
+    function updateSubscriptionLinks() {
+        const base = window.location.origin;
+        const token = currentConfig.优选订阅生成?.TOKEN || '';
+        const mixedSub = `${base}/sub?token=${token}&target=mixed`;
+        const clashSub = `${base}/sub?token=${token}&target=clash`;
+        const singSub = `${base}/sub?token=${token}&target=singbox`;
+        document.getElementById('subLinkDisplay').innerText = mixedSub;
+        document.getElementById('clashLinkDisplay').innerText = clashSub;
+        document.getElementById('singLinkDisplay').innerText = singSub;
+    }
+
+    function copyToClipboard(text, elementId) {
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById(elementId);
+            const originalText = btn.innerText;
+            btn.innerText = '✅ 已复制';
+            setTimeout(() => btn.innerText = originalText, 1500);
+        }).catch(() => alert('复制失败，手动复制吧'));
+    }
+
+    // ========== 登录逻辑 ==========
+    async function checkLogin() {
+        try {
+            // 尝试访问任意需要登录的 API 来判断是否已登录
+            await getJson('config.json');
+            isLoggedIn = true;
+            document.getElementById('loginArea').style.display = 'none';
+            document.getElementById('appArea').style.display = 'block';
+            loadConfig();
+            loadIpList();
+        } catch (e) {
+            isLoggedIn = false;
+            document.getElementById('loginArea').style.display = 'block';
+            document.getElementById('appArea').style.display = 'none';
+        }
+    }
+
+    async function doLogin() {
+        const pwd = document.getElementById('loginPwd').value;
+        if (!pwd) return;
+        const form = new FormData();
+        form.append('password', pwd);
+        try {
+            const resp = await fetch('/admin', {
+                method: 'POST',
+                body: form
+            });
+            if (resp.redirected || resp.ok) {
+                // 登录成功，刷新页面或重新检查
+                window.location.reload();
+            } else {
+                document.getElementById('loginMsg').innerText = '密码错误';
+            }
+        } catch (e) {
+            document.getElementById('loginMsg').innerText = '登录失败';
+        }
+    }
+
+    // ========== 标签切换 ==========
+    function initTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                if (tabId === 'logs') loadLogs();
+                if (tabId === 'ip') loadIpList();
+            });
+        });
+    }
+
+    // ========== 事件绑定 ==========
+    document.getElementById('doLogin')?.addEventListener('click', doLogin);
+    document.getElementById('saveNodeConfig')?.addEventListener('click', saveNodeConfig);
+    document.getElementById('saveSubSettings')?.addEventListener('click', saveSubSettings);
+    document.getElementById('saveIpList')?.addEventListener('click', saveIpList);
+    document.getElementById('refreshIpList')?.addEventListener('click', loadIpList);
+    document.getElementById('testRandomIp')?.addEventListener('click', testRandomIpGenerate);
+    document.getElementById('refreshLogs')?.addEventListener('click', loadLogs);
+    document.getElementById('runProxyTest')?.addEventListener('click', testProxy);
+    document.getElementById('copySubLink')?.addEventListener('click', () => copyToClipboard(document.getElementById('subLinkDisplay').innerText, 'copySubLink'));
+    document.getElementById('copyClashLink')?.addEventListener('click', () => copyToClipboard(document.getElementById('clashLinkDisplay').innerText, 'copyClashLink'));
+    document.getElementById('copySingLink')?.addEventListener('click', () => copyToClipboard(document.getElementById('singLinkDisplay').innerText, 'copySingLink'));
+
+    // 启动
+    checkLogin();
+    initTabs();
 </script>
 </body>
 </html>
